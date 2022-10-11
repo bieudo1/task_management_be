@@ -6,59 +6,25 @@ const validators = require('../middlewares/validators');
 const router = express.Router();
 
 
-// router.post(
-//     '/requests',
-//     authentication.loginRequired,
-//     validators.validate([
-//         body("id").exists().isString().custom(validators.checkObjectId )
-//     ]),
-//     friendController.sendFriendRequest,
-// );
+/* @route Post /projects
+    @descripton create new quest
+    @body {name,description,due}
+    @access login request
+*/
+router.post(
+    '/',
+    authentication.loginRequired,
+    validators.validate([
+        body("targetType","Invalid targetType").exists().isIn("Project","Task"),
+        body("targetId","Invalid targetId").exists().custom(validators.checkObjectId ),
+        body("link","Invalid link").exists().notEmpty(),
+]),
+fileController.createNewFile
+);
 
-// router.get(
-//     '/requests/incoming',
-//     authentication.loginRequired,
-//     friendController.getReceivedFriendRequestList,
-// );
 
-// router.get(
-//     '/requests/outcoming',
-//     authentication.loginRequired,
-//     friendController.getSentFriendRequestList,
-// );
-
-// router.get(
-//     '/',
-//     authentication.loginRequired,
-//     friendController.getFriendList,
-// );
-
-// router.put(
-//     '/requests/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//         body("status").exists().isString().isIn(["accepted","declined"]),
-//         param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.reactFriendRequest,
-// );
-
-// router.delete(
-//     '/requests/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//     param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.cancelFriendRequest,
-// );
-
-// router.delete(
-//     '/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//     param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.removeFriend,
-// );
+router.delete('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),fileController.deleteingleFile);
 
 module.exports= router

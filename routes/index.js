@@ -11,7 +11,7 @@ router.use('/users', userAPI);
 
 // taskApi
 const taskAPI = require('./task.api');
-router.use('/task', taskAPI);
+router.use('/tasks', taskAPI);
 
 // fileApi
 const fileAPI = require('./file.api');

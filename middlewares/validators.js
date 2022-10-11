@@ -11,7 +11,7 @@ validators.validate = (validationArray) => async (req, res, next) => {
 
     const messages = errors.array().map((error) => error.msg).join("&");
 
-    return sendResponse(res, 422 ,false,mull ,{messages}, "validation Error")
+    return sendResponse(res, 422 ,false,null ,{messages}, "validation Error")
 }
 
 validators.checkObjectId = (paramId) => {

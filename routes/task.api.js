@@ -5,30 +5,56 @@ const {body,param} = require("express-validator");
 const validators = require('../middlewares/validators');
 const router = express.Router();
 
+/* @route Post /task
+    @descripton create new quest
+    @body {name,description,due}
+    @access login request
+*/
+router.post('/',
+    authentication.loginRequired,
+    validators.validate([
+        body("name","Missing name").exists().notEmpty(),
+        body("description","Missing description").exists().notEmpty(),
+        body("projectId","Missing projectId").exists().isString().custom(validators.checkObjectId )
+    ]),
+    taskController.createNewTask
+);
 
-// router.post('/',
-//     authentication.loginRequired,
-//     validators.validate([
-//         body("comment","Missing comment").exists().notEmpty(),
-//         body("postId","Missing postId").exists().isString().custom(validators.checkObjectId )
-//     ]),
-//     commentController.createNewComment
-// );
+/* @route Put /task/:id
+    @descripton update a task
+    @body 
+    @access login request
+*/
+router.put('/:id', authentication.loginRequired ,validators.validate([
+        param("id").exists().isString().custom(validators.checkObjectId ),
+        body("name","Missing name").exists().notEmpty(),
+    ]),
+    taskController.updateSingleTask
+);
 
-// router.put('/:id', authentication.loginRequired ,validators.validate([
-//         param("id").exists().isString().custom(validators.checkObjectId ),
-//         body("comment","Missing comment").exists().notEmpty(),
-//     ]),
-//     commentController.updateSingleComment
-// );
+/* @route Delete /task/:id
+    @descripton delete a task
+    @body 
+    @access login request
+*/
+router.delete('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),taskController.deleteingleTask);
 
-// router.delete('/:id', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),commentController.deleteingleComment);
+/* @route Get /task/:id
+    @descripton get task with paginaton
+    @body 
+    @access login request
+*/
+router.get('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),taskController.getSingleTask);
 
-// router.get('/:id', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),commentController.getSingleComment);
+/* @route Get /task/page=1&limit=10
+    @descripton get tasks with paginaton
+    @body 
+    @access login request
+*/
 
 
 module.exports= router

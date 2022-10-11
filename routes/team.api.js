@@ -6,34 +6,59 @@ const validators = require('../middlewares/validators');
 const router = express.Router();
 
 
-// router.get("/user/:userId",validators.validate([
-//     param("userId").exists().isString().custom(validators.checkObjectId )
-// ]),postController.getPosts);
-
-
 // router.post(
+//     '/requests',
+//     authentication.loginRequired,
+//     validators.validate([
+//         body("id").exists().isString().custom(validators.checkObjectId )
+//     ]),
+//     friendController.sendFriendRequest,
+// );
+
+// router.get(
+//     '/requests/incoming',
+//     authentication.loginRequired,
+//     friendController.getReceivedFriendRequestList,
+// );
+
+// router.get(
+//     '/requests/outcoming',
+//     authentication.loginRequired,
+//     friendController.getSentFriendRequestList,
+// );
+
+// router.get(
 //     '/',
 //     authentication.loginRequired,
-//     validators.validate([body("comment","Missing comment").exists(),notEmpty()]),
-//     postController.createNewPost,
-//     );
+//     friendController.getFriendList,
+// );
 
+// router.put(
+//     '/requests/:userId',
+//     authentication.loginRequired,
+//     validators.validate([
+//         body("status").exists().isString().isIn(["accepted","declined"]),
+//         param("userId").exists().isString().custom(validators.checkObjectId ),
+//     ]),
+//     friendController.reactFriendRequest,
+// );
 
-// router.get('/:id', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),postController.getSinglePost);
+// router.delete(
+//     '/requests/:userId',
+//     authentication.loginRequired,
+//     validators.validate([
+//     param("userId").exists().isString().custom(validators.checkObjectId ),
+//     ]),
+//     friendController.cancelFriendRequest,
+// );
 
-// router.put('/:id', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),postController.updateSinglePost);
-
-// router.delete('/:id', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),postController.deleteinglePost);
-
-// router.get('/:id/comments', authentication.loginRequired ,validators.validate([
-//     param("id").exists().isString().custom(validators.checkObjectId )
-// ]),postController.getCommentsOfPost);
-
+// router.delete(
+//     '/:userId',
+//     authentication.loginRequired,
+//     validators.validate([
+//     param("userId").exists().isString().custom(validators.checkObjectId ),
+//     ]),
+//     friendController.removeFriend,
+// );
 
 module.exports= router

@@ -7,7 +7,7 @@ const authentication = {}
 authentication.loginRequired = (req, res, next) => {
     try{
         const tokenString = req.headers.authorization;
-        if(!tokenString) c
+        if(!tokenString) throw new AppError(401,"login required", "Authentication Error")
 
         const token = tokenString.replace("Bearer ", "");
         jwt.verify(token, JWT_SECRET_KEY, (err, payload) => {
@@ -18,7 +18,7 @@ authentication.loginRequired = (req, res, next) => {
                     throw new AppError(401 , "Token is invalid","Authentication Error ,")
                 }
             }
-            rep.userId = payload._id;
+            req.userId = payload._id;
         });
         next();
     }catch(err){

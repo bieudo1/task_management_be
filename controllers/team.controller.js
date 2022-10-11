@@ -1,145 +1,269 @@
 const mongoose = require('mongoose');
 const { sendResponse, AppError,catchAsync}=require("../helpers/utils.js");
-// const Post = require('../models/Post');
+const File = require('../models/File');
 const User = require('../models/User');
-// const Comment = require('../models/Comment');
-const Team = require('../models/Team');
-const postController = {};
+const friendController = {};
 
-// const calculatePostConut = async (userId) => {
-//     const postCount = await Post.countDocuments({
-//         author: userId,
-//         isDeleted: false,
+
+// const calculateFriendtConut = async (userId) => {
+//     const friendCount = await Friend.countDocuments({
+//         $or: [{ from: userId}, { to:userId }],
+//         status: "accepted",
 //     });
-//     await User.findByIdAndUpdate(userId, {postCount})
+//     await User.findByIdAndUpdate(userId, {friendCount: friendCount});
 // }
 
-
-// postController.createNewPost= catchAsync(async (req, res, next) => {
+// friendController.sendFriendRequest = catchAsync(async (req, res, next) => {
 //     const currentUserId = req.userId;
-//     let {content,image} = req.body;
+//     const toUserId = req.body.to;
 
-//     let post= await Post.create({
-//         content,
-//         image,
-//         author: currentUserId,
-//     })
+//     let user= await User.findById(toUserId);
+//     if(!user) throw new AppError(400,"User not found","Send Friend Request Error");
 
-//     await calculatePostConut(currentUserId);
-//     post = await post.populate("author")
+//     let friend = await Friend.findOne({
+//         $or: [
+//             { from: toUserId, to:currentUserId},
+//             { from: currentUserId, to:toUserId },
+//         ],
+//     });
 
-//     return sendResponse(res,200,true,post,null,"Create New Post Success")
+//     if(!friend){
+//         friend = new Friend.create({
+//             from: currentUserId,
+//             to:toUserId,
+//             status: "pending",
+//         });
+//         return sendResponse(res,200,true,friend,null,"request has ben sent");
+//     }else{
+//         switch(friend.status) {
+//             case "pending":
+//                 if (friend.fromm.equals(currentUserId)){
+//                     throw new AppError(400, "you have already sent a request to this user","Add Friend Error");
+//                 } else {
+//                     throw new AppError(400, "you have received a request from this user","Add Friend Error");
+//                 }
+//             case "accepted":
+//                 throw new AppError(400, "Users are already friend ","Add Friend Error");
+//             case "diclined":
+//                 friend.fromm = currentUserId;
+//                 friend.to = toUserId;
+//                 friend.status = "pending";
+//                 await friend.save();
+//                 return sendResponse(res,200,true,friend,null,"request has ben sent");
+//             default:
+//                 throw new AppError(400, "Frined Status undefined ","Add Friend Error");
+//         }
+//     }
 
 // });
 
-// postController.getPosts = catchAsync(async (req, res, next) => {
+// friendController.getReceivedFriendRequestList = catchAsync(async (req, res, next) => {
+//     let (page, limit,...filter) = {...req.query};
 //     const currentUserId = req.userId;
-//     const userId = req.params.userId;
-//     let { page, limit} = {...req.query};
-//     let user= await User.findById(userId);
-//     if(!user) throw new AppError(400,"User not found","Get Posts Error");
+
+
+//     const friendList = await Friend.find({
+//         to: currentUserId,
+//         status: "pending",
+//     });
+
+//     const friendIDs = friendList.map((friend) => {
+//         if(friend.from._id.equals(currentUserId)) return friend.to;
+//         return friend.from;
+//     });
+
+//     const filterCondition = [ {_id: {$in: friendIDs} }];
+//     if(filter.name) {
+//         filterCondition.push({
+//             ["name"]: {$regex: filter.name, $options: "i"},
+//         });
+//     }
+//     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 
 //     page = parseInt(page) || 1;
 //     limit = parseInt(limit) || 10;
 
-//     let userFriendIds = await Friend.find({
-//         $or:[{ from: userId},{ to: userId}],
-//         status:"accepted"
-//     })
-//     if (userFriendIds.length && userFriendIds) {
-//         userFriendIds = userFriendIds.map((friend) =>{
-//             if (friend.from._id.equals(userId)) return friend.to;
-//             return friend.from;
-//         })
-//     } else {
-//         userFriendIds =[]
+//     const count = await User.countDocuments(filterCrileria);
+//     const totalPages = Math.ceil(count / limit);
+//     const offset = limit * (page - 1);
+
+//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
+    
+//     const userWithFriendship = users.map((user) => {
+//         let temp = user.toJSON();
+//         temp.friendship = friendList.find((friendship) => {
+//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
+//                 return { status: friendship.status};
+//             }
+//             return false;
+//         });
+//         return temp;
+//     });
+    
+//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
+
+// });
+
+// friendController.getSentFriendRequestList =catchAsync(async (req, res, next) => {
+//     let (page, limit,...filter) = {...req.query};
+//     const currentUserId = req.userId;
+
+
+//     const friendList = await Friend.find({
+//         from: currentUserId,
+//         status: "pending",
+//     });
+
+//     const friendIDs = friendList.map((friend) => {
+//         if(friend.from._id.equals(currentUserId)) return friend.to;
+//         return friend.from;
+//     });
+
+//     const filterCondition = [ {_id: {$in: friendIDs} }];
+//     if(filter.name) {
+//         filterCondition.push({
+//             ["name"]: {$regex: filter.name, $options: "i"},
+//         });
 //     }
-//     userFriendIds = [...userFriendIds, userId];
-
-//     const filterCondition = [{isDeleted: false} ,{ author: {$in: userFriendIds}}];
-
 //     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 
-//     const count = await Post.countDocuments(filterCrileria);
+//     page = parseInt(page) || 1;
+//     limit = parseInt(limit) || 10;
+
+//     const count = await User.countDocuments(filterCrileria);
 //     const totalPages = Math.ceil(count / limit);
 //     const offset = limit * (page - 1);
 
-//     let posts = await Post.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("author");
+//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
+    
+//     const userWithFriendship = users.map((user) => {
+//         let temp = user.toJSON();
+//         temp.friendship = friendList.find((friendship) => {
+//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
+//                 return { status: friendship.status};
+//             }
+//             return false;
+//         });
+//         return temp;
+//     });
+    
+//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
 
-//     return sendResponse(res,200,true,{posts,totalPages,count},null,"Get Current User successful");
 // });
 
-
-// postController.getSinglePost = catchAsync( async (req, res, next) => {
+// friendController.getFriendList =  catchAsync(async (req, res, next) => {
+//     let (page, limit,...filter) = {...req.query};
 //     const currentUserId = req.userId;
-//     const postId =req.params.id;
-
-//     let post= await Post.findById(postId);
-//     if(!post) throw new AppError(400,"Post not found","Get Single Post Error");
-
-//     post = post.toJSON();
-//     post.comments = await Comment.find({post: post._id}).populate("author")
-
-//     return sendResponse(res,200,true,post,null,"Get Single Post successful");
-// });
-
-// postController.getCommentsOfPost = catchAsync(async (req, res, next) => {
-//     const postId = req.params.userId;
-//     page = parseInt(req.query.page) || 1;
-//     limit = parseInt(req.query.limit) || 10;
-
-//     const post= await Post.findById(postId);
-//     if(!post) throw new AppError(400,"Post not found","Get Comments Error");
 
 
-//     const count = await Comment.countDocuments({post: postId});
+//     const friendList = await Friend.find({
+//         $of: [{from: currentUserId, to: currentUserId},],
+//         status: "accepted",
+//     });
+
+//     const friendIDs = friendList.map((friend) => {
+//         if(friend.from._id.equals(currentUserId)) return friend.to;
+//         return friend.from;
+//     });
+
+//     const filterCondition = [ {_id: {$in: friendIDs} }];
+//     if(filter.name) {
+//         filterCondition.push({
+//             ["name"]: {$regex: filter.name, $options: "i"},
+//         });
+//     }
+//     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
+
+//     page = parseInt(page) || 1;
+//     limit = parseInt(limit) || 10;
+
+//     const count = await User.countDocuments(filterCrileria);
 //     const totalPages = Math.ceil(count / limit);
 //     const offset = limit * (page - 1);
 
-//     const comments = await Comment.find({post: postId}).sort({createdAt: -1 }).skip(offset).limit(limit).populate("author");
+//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
+    
+//     const userWithFriendship = users.map((user) => {
+//         let temp = user.toJSON();
+//         temp.friendship = friendList.find((friendship) => {
+//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
+//                 return { status: friendship.status};
+//             }
+//             return false;
+//         });
+//         return temp;
+//     });
+    
+//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
 
-//     return sendResponse(res,200,true,{comments,totalPages,count},null,"Get Comments successful");
 // });
 
-// postController.updateSinglePost = catchAsync(async (req, res, next) => {
+// friendController.reactFriendRequest = catchAsync(async (req, res, next) => {
 //     const currentUserId = req.userId;
-//     const postId =req.params.id;
+//     const {status} = req.body;
+//     const fromUserId = req.params.userId;
 
 
-//     let post= await Post.findById(postId);
-//     if(!post) throw new AppError(400,"Post not found","Update Post Error");
-//     if(!post.author.equals(currentUserId)) 
-//         throw new AppError(400,"Only author can edit post" , "Update Post Error");
+//     const friend = await Friend.findOne({
+//         from: fromUserId,
+//         to:currentUserId,
+//         status: "pending",
+//     });
 
-//     const allows = [
-//     "content",
-//     "image",]
+//     if(!friend) throw new AppError(400,"Friend Request not found","Cancel Request Error");
 
-//     allows.forEach((field) =>{
-//         if(req.body[field] !== undefined){
-//             post[field] = req.body[field];
-//         }
+//     friend.status= status;
+//     await friend.save();
+
+//     if(status === "accepted") {
+//         await calculateFriendtConut(currentUserId);
+//         await calculateFriendtConut(fromUserId);
+//     }
+
+//     return sendResponse(res,200,true,friend,null,"React Friend Request successfully")
+
+// });
+
+// friendController.cancelFriendRequest =catchAsync(async (req, res, next) => {
+//     const currentUserId = req.userId;
+//     const toUserId = req.body.to;
+
+
+//     const friend = await Friend.findOne({
+//         from: currentUserId,
+//             to:toUserId,
+//             status: "pending",
 //     })
-//     await post.save();
 
-//     return sendResponse(res,200,true,post,null,"update Post successful");
+//     if(!friend) throw new AppError(400,"Friend Request not found","Cancel Request Error");
+
+//     await friend.delete();
+
+//     return sendResponse(res,200,true,friend,null,"Friend has been cancelled")
+
 // });
 
-// postController.deleteinglePost = catchAsync(async (req, res, next) => {
+// friendController.removeFriend = catchAsync(async (req, res, next) => {
 //     const currentUserId = req.userId;
-//     const postId =req.params.id;
+//     const friendId = req.params.userId;
 
-//     const post = await Post.findOneAndUpdate(
-//         {_id: postId, author: currentUserId},
-//         {isDeleted: true},
-//         {new: true}
-//     )
-//     if(!post) throw new AppError(400,"post not found or User not authorized","Delete Post Error ")
-//     await calculatePostConut(currentUserId);
 
-//     return sendResponse(res,200,true,post,null,"update Post successful");
+//     const friend = await Friend.findOne({
+//         $of: [
+//             {from: friendId, to: currentUserId},
+//             { from: currentUserId, to: friendId },
+//         ],
+//         status: "accepted",
+//     });
+
+//     if(!friend) throw new AppError(400,"Friend Request not found","Remove Friend Error");
+
+//     await friend.delete();
+//     await calculateFriendtConut(currentUserId);
+//     await calculateFriendtConut(fromUserId);
+
+//     return sendResponse(res,200,true,friend,null,"Friend has been remove")
+
 // });
 
-
-
-module.exports = postController;
+module.exports = friendController;

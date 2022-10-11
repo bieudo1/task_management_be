@@ -10,6 +10,9 @@ const taskSchema = Schema(
 			type: String,
 			required: true,
 		},
+        project:{type:Schema.Types.ObjectId,
+            required: true,
+            ref: "Project",},
         assigner: { 
             type:Schema.Types.ObjectId,
             required: true,
@@ -17,13 +20,14 @@ const taskSchema = Schema(
         },
         assignee: [{ 
             type:Schema.Types.ObjectId,
-            required: true,
+            required: false,
             ref: "User",
         }],
         status: { 
             type: String,
             enum: ["pending", "working","review","done","archive"], 
-            require: true
+            require: true,
+            default: "working"
         },
         review:[{
             type: String,
@@ -44,15 +48,20 @@ const taskSchema = Schema(
             type: Number,
             max: 100,
             min: 0,
+            required: true,
+            default:0
         },
         important:{
             type: Boolean,
             required: true,
+            default: false
         },
         urgent:{           
             type: Boolean,
             required: true,
-        }
+            default: false
+        },
+		isDeleted: { type: Boolean, default: false, select: false },
 	},
 	{
 		timestamps: true,

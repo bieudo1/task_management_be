@@ -1,71 +1,135 @@
 const mongoose = require('mongoose');
 const { sendResponse, AppError,catchAsync}=require("../helpers/utils.js");
+const User = require('../models/User');
+const Task = require('../models/Task');
 const Project = require('../models/Project');
-// const Comment = require('../models/Comment');
-const commentController = {};
+const projectController = {};
 
-// const calculateCommentConut = async (postId) => {
-//     const commentCount = await Comment.countDocuments({
-//         post: postId,
+// const calculateProjectConut = async (userId) => {
+//     const postCount = await Post.countDocuments({
+//         author: userId,
 //         isDeleted: false,
 //     });
-//     await Post.findByIdAndUpdate(postId, {commentCount})
+//     await User.findByIdAndUpdate(userId, {postCount})
 // }
 
-// commentController.createNewComment= catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     let {content,postId} = req.body;
+//Create New Project
+projectController.createNewProject= catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    let {name,description} = req.body;
+    console.log(currentUserId)
+    let project= await Project.create({
+        name,
+        description,
+        assigner: currentUserId,
+    })
 
-//     const post= await Post.findById(postId);
-//     if(!post) throw new AppError(400,"Post not found", "Create New comment error");
+    // await calculateProjectConut(currentUserId);
+    project = await project.populate("assigner");
 
-//     let comment= await Comment.create({
-//         post: postId,
-//         author:currentUserId,
-//         content
-//     })
+    return sendResponse(res,200,true,project,null,"Create New Project Success")
 
-//     await calculateCommentConut(postId);
-//     comment = await comment.populate("author")
+});
 
-//     return sendResponse(res,200,true,comment,null,"Create New comment Success")
+projectController.getProjects = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const userId = req.params.userId;
+    let { page, limit,...filter } = {...req.query};
+    let user= await User.findById(userId);
+    if(!user) throw new AppError(400,"User not found","Get Posts Error");
 
-// });
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
 
-// commentController.getSingleComment = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const commentId =req.params.id;
 
-//     let comment= await Comment.findById(commentId);
-//     if(!comment) throw new AppError(400,"Comment not found","Get single Comment Error");
+    const filterCondition = [{isDeleted: false} ,{ assigner: userId}];
+     if(filter.name) {
+         filterCondition.push({name: {$regex: filter.name, $options: "i"},})
+     }
 
-//     return sendResponse(res,200,true,comment,null,"Get Post successful");
-// });
+    const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 
-// commentController.updateSingleComment = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const commentId =req.params.id;
-//     const {content} = req.body;
+    const count = await Project.countDocuments(filterCrileria);
+    const totalPages = Math.ceil(count / limit);
+    const offset = limit * (page - 1);
 
-//     const comment = await Comment.findByIdAndUpdate(
-//         {_id: commentId, author: currentUserId},
-//         {content},
-//         {next: true}
-//     );
-//     if(!comment) throw new AppError(400,"Comment not found or User not authorized","Update Comment Error");
-//     return sendResponse(res,200,true,comment,null,"update Post successful");
-// });
+    let projects = await Project.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("assigner");
 
-// commentController.deleteingleComment = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const commentId =req.params.id;
+    return sendResponse(res,200,true,{projects,totalPages,count},null,"Get Current User successful");
+});
 
-//     const comment = await Comment.findByIdAndDelete(
-//         {_id: commentId, author: currentUserId},
-//     );
-//     if(!comment) throw new AppError(400,"comment not found or User not authorized","Delete comment Error ")
-//     await calculateCommentConut(comment.post);
 
-//     return sendResponse(res,200,true,comment,null,"Delete Post successful");
-// });
-module.exports = commentController;
+projectController.getSingleProject = catchAsync( async (req, res, next) => {
+    const currentUserId = req.userId;
+    const projectId =req.params.id;
+
+    let project= await Project.findById(projectId);
+    if(!project) throw new AppError(400,"Project not found","Get Single Project Error");
+
+    // project = project.toJSON();
+    // project.comments = await Comment.find({project: project._id}).populate("assigner")
+
+    return sendResponse(res,200,true,project,null,"Get Single Project successful");
+});
+
+projectController.getTaskOfProject = catchAsync(async (req, res, next) => {
+    const projectId = req.params.id;
+    console.log(projectId)
+    page = parseInt(req.query.page) || 1;
+    limit = parseInt(req.query.limit) || 10;
+
+    const project= await Project.findById(projectId);
+    if(!project) throw new AppError(400,"Project not found","Get Comments Error");
+
+
+    const count = await Task.countDocuments({project: projectId});
+    const totalPages = Math.ceil(count / limit);
+    const offset = limit * (page - 1);
+
+    const tasks = await Task.find({project: projectId}).sort({createdAt: -1 }).skip(offset).limit(limit).populate("assigner");
+
+    return sendResponse(res,200,true,{tasks,totalPages,count},null,"Get tasks successful");
+});
+
+projectController.updateSingleProject = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const projectId =req.params.id;
+
+
+    let project= await Project.findById(projectId);
+    if(!project) throw new AppError(400,"Project not found","Update Project Error");
+    if(!project.assigner.equals(currentUserId)) 
+        throw new AppError(400,"Only assigner can edit project" , "Update Project Error");
+
+    const allows = [
+    "name",
+    "description",]
+
+    allows.forEach((field) =>{
+        if(req.body[field] !== undefined){
+            project[field] = req.body[field];
+        }
+    })
+    await project.save();
+
+    return sendResponse(res,200,true,project,null,"update Project successful");
+});
+
+projectController.deleteinglepPoject = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const projectId =req.params.id;
+
+    const project = await Project.findOneAndUpdate(
+        {_id: projectId, assigner: currentUserId},
+        {isDeleted: true},
+        {new: true}
+    )
+    if(!project) throw new AppError(400,"project not found or User not authorized","Delete Project Error ")
+    // await calculateProjectConut(currentUserId);
+
+    return sendResponse(res,200,true,project,null,"update Project successful");
+});
+
+
+
+module.exports = projectController;

@@ -1,67 +1,73 @@
 const mongoose = require('mongoose');
 const { sendResponse, AppError,catchAsync}=require("../helpers/utils.js");
+const Project = require('../models/Project');
 const Task = require('../models/Task');
-// const Comment = require('../models/Comment');
-// const Reaction = require('../models/Reaction');
-const reactionController = {};
+const taskController = {};
 
-// const calculateReactionConut = async(targetId,targetType) =>{
-//     const status = await Reaction.aggregate([
-//         {
-//             $match:{ targetId: mongoose.Types.ObjectId(targetId)},
-//         },
-//         {
-//             $group:{
-//                 _id: "$targetId",
-//                 like: {
-//                     $sum: { 
-//                         $count:[{$eq: ["$emoji","like"]},1,0],
-//                     },
-//                 },
-//                 dislike: {
-//                     $sum: { 
-//                         $count:[{$eq: ["$emoji","dislike"]},1,0],
-//                     },
-//                 },
-//             },
-//         },
-//     ]);
-//     const reactions = {
-//         like: (status[0] && status[0].like || 0),
-//         dislike: (status[0] && status[0].dislike || 0),
-//     }
-//     await mongoose.model(targetType).findByIdAndUpdate(targetId,{reactions});
-//     return reactions;
-// };
+const calculateTaskConut = async (projectId) => {
+    const taskCount = await Task.countDocuments({
+        project: projectId,
+        isDeleted: false,
+    });
+    await Project.findByIdAndUpdate(projectId, {taskCount})
+}
 
-// reactionController.saveReaction = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const {targetType,targetId,emoji} = req.body
+taskController.createNewTask= catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    let {name,description,due,projectId} = req.body;
 
-//     const targetObject= await mongoose.model(targetType).findById(targetId);
-//     if(!targetObject) throw new AppError(400,`${targetType} not found`, "Create Reaction error");
+    const project= await Project.findById(projectId);
+    if(!project) throw new AppError(400,"Project not found", "Create New task error");
 
-//     let reaction = await Reaction.findOne({
-//         targetId,
-//         targetType,
-//         author:currentUserId,
-//     });
+    let task= await Task.create({
+        project: projectId,
+        assigner:currentUserId,
+        name,description,due
+    })
 
-//     if(!reaction){
-//         reaction = await Reaction.create({targetId, targetType, author:currentUserId,emoji,});
-//     }else{
-//         if(reaction.emoji === emoji){
-//             await reaction.delete();
-//         }else{
-//             reaction.emoji = emoji;
-//             await reaction.save();
-//         }
-//     }
+    await calculateTaskConut(projectId);
+    task = await task.populate("assigner")
 
-//     const reactions = await calculateReactionConut(targetId,targetType)
+    return sendResponse(res,200,true,task,null,"Create New task Success")
 
-//     return sendResponse(res,200,true,reactions,null,"Save reaction Successful")
+});
 
-// });
+taskController.getSingleTask = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const taskId =req.params.id;
 
-module.exports = reactionController;
+    let task= await Task.findById(taskId);
+    if(!task) throw new AppError(400,"task not found","Get single task Error");
+
+    return sendResponse(res,200,true,task,null,"Get Post successful");
+});
+
+taskController.updateSingleTask = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const taskId =req.params.id;
+    const {name,description,due} = req.body;
+
+    const task = await Task.findByIdAndUpdate(
+        {_id: taskId, assigner: currentUserId},
+        {name,description,due},
+        {next: true}
+    );
+    if(!task) throw new AppError(400,"task not found or User not authorized","Update task Error");
+    return sendResponse(res,200,true,task,null,"update Post successful");
+});
+
+taskController.deleteingleTask = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const taskId =req.params.id;
+
+    const task = await Task.findOneAndUpdate(
+        {_id: taskId, assigner: currentUserId},
+        {isDeleted: true},
+        {new: true}
+    );
+    if(!task) throw new AppError(400,"task not found or User not authorized","Delete task Error ")
+    await calculateTaskConut(task.project);
+
+    return sendResponse(res,200,true,task,null,"Delete Post successful");
+});
+module.exports = taskController;

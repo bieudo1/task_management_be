@@ -6,10 +6,25 @@ const fileSchema = Schema(
 			type: String,
 			required: true,
 		},
+		author: { 
+            type:Schema.Types.ObjectId,
+            required: true,
+            ref: "User",
+        },
         link: {
 			type: String,
 			required: true,
 		},
+		targetType:{
+            type:String,
+            required: true,
+            enum:["Project","Task"]
+        },
+        targetId: { 
+            type:Schema.Types.ObjectId,
+            required: true,
+            ref: "targetType",
+        },
     },
 	{
 		timestamps: true,

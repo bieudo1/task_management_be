@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
+
 const projectSchema = Schema(
 	{
         name: { 
@@ -10,16 +11,17 @@ const projectSchema = Schema(
             type:String,
             required: true,
         },
+        assigner: { 
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "User",
+        },
         status: { 
             type: String,
-            enum: ["pending", "working","review","done","archive"], 
-            require: true
+            enum: ["working","done","archive"], 
+            require: true,
+            default:'working'
         },
-        task: [{ 
-            type:Schema.Types.ObjectId,
-            required: true,
-            ref: "Task",
-        }],
 		isDeleted: { type: Boolean, default: false, select: false },
 	},
 	{
