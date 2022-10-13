@@ -11,11 +11,12 @@ const teamSchema = Schema(
             required: true,
             ref: "User",
         },
-        workers: { 
+        workers: [{ 
             type:Schema.Types.ObjectId,
-            required: true,
+            required: false,
             ref: "User",
-        },
+        }],
+		isDeleted: { type: Boolean, default: false, select: false },
     },
     {
         timestamps: true,

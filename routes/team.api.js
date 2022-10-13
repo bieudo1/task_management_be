@@ -5,60 +5,76 @@ const {body,param} = require("express-validator");
 const validators = require('../middlewares/validators');
 const router = express.Router();
 
+/* @route Post /teams
+    @descripton create New Team
+    @body {name}
+    @access login request
+*/
+router.post('/',
+    authentication.loginRequired,
+    validators.validate([
+        body("name","Missing name").exists().notEmpty(),
+    ]),
+    teamController.createNewTeam
+);
 
-// router.post(
-//     '/requests',
-//     authentication.loginRequired,
-//     validators.validate([
-//         body("id").exists().isString().custom(validators.checkObjectId )
-//     ]),
-//     friendController.sendFriendRequest,
-// );
+/* @route Get/teams
+    @descripton get Team List
+    @body
+    @access login request
+*/
+router.get('/',
+    authentication.loginRequired,
+    teamController.getTeamList,
+);
 
-// router.get(
-//     '/requests/incoming',
-//     authentication.loginRequired,
-//     friendController.getReceivedFriendRequestList,
-// );
+/* @route GEt /teams/:id
+    @descripton get Single Team
+    @body 
+    @access login request
+*/
+router.get('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),teamController.getSingleTeam);
 
-// router.get(
-//     '/requests/outcoming',
-//     authentication.loginRequired,
-//     friendController.getSentFriendRequestList,
-// );
+/* @route Put /teams/:id
+    @descripton update Single Team
+    @body {name}
+    @access login request
+*/
+router.put('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId ),
+    body("name","Missing name").exists().notEmpty(),
+]),
+teamController.updateSingleTeam)
 
-// router.get(
-//     '/',
-//     authentication.loginRequired,
-//     friendController.getFriendList,
-// );
+/* @route Put /team/:id/user
+    @descripton assign teams to user
+    @body {userId}
+    @access login request
+*/
+router.put('/:id/user', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId ),
+    body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
+]),teamController.putTeamForUser);
 
-// router.put(
-//     '/requests/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//         body("status").exists().isString().isIn(["accepted","declined"]),
-//         param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.reactFriendRequest,
-// );
+/* @route delete /team/:id/user
+    @descripton assign teams to user
+    @body {userId}
+    @access login request
+*/
+router.delete('/:id/user', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId ),
+    body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
+]),teamController.deleteUserFomTeam);
 
-// router.delete(
-//     '/requests/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//     param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.cancelFriendRequest,
-// );
-
-// router.delete(
-//     '/:userId',
-//     authentication.loginRequired,
-//     validators.validate([
-//     param("userId").exists().isString().custom(validators.checkObjectId ),
-//     ]),
-//     friendController.removeFriend,
-// );
+/* @route delete /team/:id/user
+    @descripton delete Single Team
+    @body 
+    @access login request
+*/
+router.delete('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),teamController.deleteSingleTeam);
 
 module.exports= router

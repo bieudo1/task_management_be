@@ -24,11 +24,10 @@ const userSchema = Schema(
 			enum: ['Ceo', 'Manager', 'Worker'],
 		},
 		team: {
-			// type:Schema.Types.ObjectId,
+			type:Schema.Types.ObjectId,
 			type: String,
             required: false,
-			default: '',
-            // ref: "Team",
+            ref: "Team",
 		},
 		imageUrl: {
 			type: String,

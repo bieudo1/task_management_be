@@ -1,269 +1,130 @@
 const mongoose = require('mongoose');
 const { sendResponse, AppError,catchAsync}=require("../helpers/utils.js");
-const File = require('../models/File');
+const Team = require('../models/Team');
 const User = require('../models/User');
-const friendController = {};
+const teamController = {};
 
 
-// const calculateFriendtConut = async (userId) => {
-//     const friendCount = await Friend.countDocuments({
-//         $or: [{ from: userId}, { to:userId }],
-//         status: "accepted",
-//     });
-//     await User.findByIdAndUpdate(userId, {friendCount: friendCount});
-// }
 
-// friendController.sendFriendRequest = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const toUserId = req.body.to;
+teamController.createNewTeam = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    let {name} = req.body;
 
-//     let user= await User.findById(toUserId);
-//     if(!user) throw new AppError(400,"User not found","Send Friend Request Error");
+    const manager= await User.findById(currentUserId);
+    if(!manager) throw new AppError(400,"manager not found", "Create New team error");
 
-//     let friend = await Friend.findOne({
-//         $or: [
-//             { from: toUserId, to:currentUserId},
-//             { from: currentUserId, to:toUserId },
-//         ],
-//     });
+    let team= await Team.create({
+        name,
+        manager:currentUserId
+    })
 
-//     if(!friend){
-//         friend = new Friend.create({
-//             from: currentUserId,
-//             to:toUserId,
-//             status: "pending",
-//         });
-//         return sendResponse(res,200,true,friend,null,"request has ben sent");
-//     }else{
-//         switch(friend.status) {
-//             case "pending":
-//                 if (friend.fromm.equals(currentUserId)){
-//                     throw new AppError(400, "you have already sent a request to this user","Add Friend Error");
-//                 } else {
-//                     throw new AppError(400, "you have received a request from this user","Add Friend Error");
-//                 }
-//             case "accepted":
-//                 throw new AppError(400, "Users are already friend ","Add Friend Error");
-//             case "diclined":
-//                 friend.fromm = currentUserId;
-//                 friend.to = toUserId;
-//                 friend.status = "pending";
-//                 await friend.save();
-//                 return sendResponse(res,200,true,friend,null,"request has ben sent");
-//             default:
-//                 throw new AppError(400, "Frined Status undefined ","Add Friend Error");
-//         }
-//     }
+    team = await team.populate("manager")
 
-// });
+    return sendResponse(res,200,true,team,null,"Create New team Success")
+})
 
-// friendController.getReceivedFriendRequestList = catchAsync(async (req, res, next) => {
-//     let (page, limit,...filter) = {...req.query};
-//     const currentUserId = req.userId;
+teamController.getTeamList = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    let { page, limit,...filter } = {...req.query};
+
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
 
 
-//     const friendList = await Friend.find({
-//         to: currentUserId,
-//         status: "pending",
-//     });
+    const filterCondition = [{isDeleted: false} ];
+     if(filter.name) {
+         filterCondition.push({name: {$regex: filter.name, $options: "i"},})
+     }
 
-//     const friendIDs = friendList.map((friend) => {
-//         if(friend.from._id.equals(currentUserId)) return friend.to;
-//         return friend.from;
-//     });
+    const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 
-//     const filterCondition = [ {_id: {$in: friendIDs} }];
-//     if(filter.name) {
-//         filterCondition.push({
-//             ["name"]: {$regex: filter.name, $options: "i"},
-//         });
-//     }
-//     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
+    const count = await Team.countDocuments(filterCrileria);
+    const totalPages = Math.ceil(count / limit);
+    const offset = limit * (page - 1);
 
-//     page = parseInt(page) || 1;
-//     limit = parseInt(limit) || 10;
+    let teams = await Team.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("manager");
 
-//     const count = await User.countDocuments(filterCrileria);
-//     const totalPages = Math.ceil(count / limit);
-//     const offset = limit * (page - 1);
+    return sendResponse(res,200,true,{teams,totalPages,count},null,"Get Current User successful");
+})
 
-//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
+teamController.getSingleTeam = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const teamId =req.params.id;
+
+    let team= await Team.findById(teamId);
+    if(!team) throw new AppError(400,"team.1 not found","Get single team Error");
+
+    return sendResponse(res,200,true,team,null,"Get Team successful");
+})
+
+teamController.updateSingleTeam = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const teamId =req.params.id;
+    const {name} = req.body;
+
+    const team = await Team.findByIdAndUpdate(
+        {_id: teamId, assigner: currentUserId},
+        {name},
+        {next: true}
+    );
+    if(!team) throw new AppError(400,"team not found or User not authorized","Update team Error");
+    return sendResponse(res,200,true,team,null,"update Team successful");
+})
+
+teamController.putTeamForUser = catchAsync(async (req, res, next) => {
+    const teamId = req.params.id;
+    const {userId} = req.body;
+
+    let user = await User.findById(userId);
+    // console.log(user.team === teamId)
+    if(!user || user.team === teamId) throw new AppError(400,"User not found or the user is already on the team","assign teams to user Error ");
+    user.team = teamId;
+    user = await user.save();
+
+    let team = await Team.findByIdAndUpdate(
+        {_id: teamId},
+        {$push:{workers:userId}},
+        {new: true}
+    );
+    team = await team.populate("manager")
+    team = await team.populate("workers");
+
+
+    return sendResponse(res,200,true,team,null,"assign teams to user");
+})
+teamController.deleteUserFomTeam = catchAsync(async (req, res, next) => {
+    const teamId = req.params.id;
+    const {userId} = req.body;
+
+    let user = await User.findById(userId);
+    if(!user || user.team !== teamId) throw new AppError(400,"User not found or the user is not in the team","assign teams to user Error ");
+    user.team = " ";
+    user = await user.save();
+
+    let team = await Team.findByIdAndUpdate(
+        {_id: teamId},
+        {$pull:{workers:userId}},
+        {new: true}
+    );
+    team = await team.populate("manager")
+    team = await team.populate("workers");
     
-//     const userWithFriendship = users.map((user) => {
-//         let temp = user.toJSON();
-//         temp.friendship = friendList.find((friendship) => {
-//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
-//                 return { status: friendship.status};
-//             }
-//             return false;
-//         });
-//         return temp;
-//     });
-    
-//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
 
-// });
+    return sendResponse(res,200,true,team,null,"assign teams to user");
+})
 
-// friendController.getSentFriendRequestList =catchAsync(async (req, res, next) => {
-//     let (page, limit,...filter) = {...req.query};
-//     const currentUserId = req.userId;
+teamController.deleteSingleTeam = catchAsync(async (req, res, next) => {
+    const currentUserId = req.userId;
+    const teamId =req.params.id;
+
+    const team = await Team.findOneAndUpdate(
+        {_id: teamId, assigner: currentUserId},
+        {isDeleted: true},
+        {new: true}
+    );
+    if(!team) throw new AppError(400,"team not found or User not authorized","Delete team Error ")
 
 
-//     const friendList = await Friend.find({
-//         from: currentUserId,
-//         status: "pending",
-//     });
-
-//     const friendIDs = friendList.map((friend) => {
-//         if(friend.from._id.equals(currentUserId)) return friend.to;
-//         return friend.from;
-//     });
-
-//     const filterCondition = [ {_id: {$in: friendIDs} }];
-//     if(filter.name) {
-//         filterCondition.push({
-//             ["name"]: {$regex: filter.name, $options: "i"},
-//         });
-//     }
-//     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
-
-//     page = parseInt(page) || 1;
-//     limit = parseInt(limit) || 10;
-
-//     const count = await User.countDocuments(filterCrileria);
-//     const totalPages = Math.ceil(count / limit);
-//     const offset = limit * (page - 1);
-
-//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
-    
-//     const userWithFriendship = users.map((user) => {
-//         let temp = user.toJSON();
-//         temp.friendship = friendList.find((friendship) => {
-//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
-//                 return { status: friendship.status};
-//             }
-//             return false;
-//         });
-//         return temp;
-//     });
-    
-//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
-
-// });
-
-// friendController.getFriendList =  catchAsync(async (req, res, next) => {
-//     let (page, limit,...filter) = {...req.query};
-//     const currentUserId = req.userId;
-
-
-//     const friendList = await Friend.find({
-//         $of: [{from: currentUserId, to: currentUserId},],
-//         status: "accepted",
-//     });
-
-//     const friendIDs = friendList.map((friend) => {
-//         if(friend.from._id.equals(currentUserId)) return friend.to;
-//         return friend.from;
-//     });
-
-//     const filterCondition = [ {_id: {$in: friendIDs} }];
-//     if(filter.name) {
-//         filterCondition.push({
-//             ["name"]: {$regex: filter.name, $options: "i"},
-//         });
-//     }
-//     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
-
-//     page = parseInt(page) || 1;
-//     limit = parseInt(limit) || 10;
-
-//     const count = await User.countDocuments(filterCrileria);
-//     const totalPages = Math.ceil(count / limit);
-//     const offset = limit * (page - 1);
-
-//     let users = await Friend.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit);
-    
-//     const userWithFriendship = users.map((user) => {
-//         let temp = user.toJSON();
-//         temp.friendship = friendList.find((friendship) => {
-//             if(friendship.from.equals(user._id) || friendship.to.equals(user._id)){
-//                 return { status: friendship.status};
-//             }
-//             return false;
-//         });
-//         return temp;
-//     });
-    
-//     return sendResponse(res,200,true,{users:userWithFriendship, totalPages, count},null,"React Friend Request successfully")
-
-// });
-
-// friendController.reactFriendRequest = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const {status} = req.body;
-//     const fromUserId = req.params.userId;
-
-
-//     const friend = await Friend.findOne({
-//         from: fromUserId,
-//         to:currentUserId,
-//         status: "pending",
-//     });
-
-//     if(!friend) throw new AppError(400,"Friend Request not found","Cancel Request Error");
-
-//     friend.status= status;
-//     await friend.save();
-
-//     if(status === "accepted") {
-//         await calculateFriendtConut(currentUserId);
-//         await calculateFriendtConut(fromUserId);
-//     }
-
-//     return sendResponse(res,200,true,friend,null,"React Friend Request successfully")
-
-// });
-
-// friendController.cancelFriendRequest =catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const toUserId = req.body.to;
-
-
-//     const friend = await Friend.findOne({
-//         from: currentUserId,
-//             to:toUserId,
-//             status: "pending",
-//     })
-
-//     if(!friend) throw new AppError(400,"Friend Request not found","Cancel Request Error");
-
-//     await friend.delete();
-
-//     return sendResponse(res,200,true,friend,null,"Friend has been cancelled")
-
-// });
-
-// friendController.removeFriend = catchAsync(async (req, res, next) => {
-//     const currentUserId = req.userId;
-//     const friendId = req.params.userId;
-
-
-//     const friend = await Friend.findOne({
-//         $of: [
-//             {from: friendId, to: currentUserId},
-//             { from: currentUserId, to: friendId },
-//         ],
-//         status: "accepted",
-//     });
-
-//     if(!friend) throw new AppError(400,"Friend Request not found","Remove Friend Error");
-
-//     await friend.delete();
-//     await calculateFriendtConut(currentUserId);
-//     await calculateFriendtConut(fromUserId);
-
-//     return sendResponse(res,200,true,friend,null,"Friend has been remove")
-
-// });
-
-module.exports = friendController;
+    return sendResponse(res,200,true,team,null,"Delete Team successful");
+})
+module.exports = teamController;

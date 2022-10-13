@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 const { sendResponse, AppError,catchAsync}=require("../helpers/utils.js");
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const Task = require('../models/Task');
 const userController = {};
 
+// thêm managerId và phone
 userController.register = catchAsync( async (req, res, next) => {
     let {name,email,password,role,imageUrl } = req.body;
     let user = await User.findOne({ email });
@@ -52,8 +54,9 @@ userController.getSingleUsers = catchAsync( async (req, res, next) => {
 
     let user= await User.findById(userId);
     if(!user) throw new AppError(400,"User not found","Get Single User Error");
+    let task = await Task.find({assignee:userId,status:{$ne:"archive"}})
 
-    return sendResponse(res,200,true,user,null,"Get Single User successful");
+    return sendResponse(res,200,true,{user,task:task},null,"Get Single User successful");
 });
 
 userController.updatePorfile = catchAsync(async (req, res, next) => {

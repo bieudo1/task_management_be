@@ -18,11 +18,11 @@ const taskSchema = Schema(
             required: true,
             ref: "User",
         },
-        assignee: [{ 
+        assignee: { 
             type:Schema.Types.ObjectId,
             required: false,
             ref: "User",
-        }],
+        },
         status: { 
             type: String,
             enum: ["pending", "working","review","done","archive"], 
@@ -42,7 +42,6 @@ const taskSchema = Schema(
             type:Schema.Types.ObjectId,
             required: false,
             ref: 'file',
-            default:"",
         }],
         progress:{
             type: Number,
