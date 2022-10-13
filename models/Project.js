@@ -16,6 +16,16 @@ const projectSchema = Schema(
             required: true,
             ref: "User",
         },
+        assignee: [{ 
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "User",
+        }],
+        task: [{ 
+            type: Schema.Types.ObjectId,
+            required: false,
+            ref: "Task",
+        }],
         status: { 
             type: String,
             enum: ["working","done","archive"], 

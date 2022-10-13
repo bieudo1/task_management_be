@@ -9,7 +9,10 @@ fileController.createNewFile = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
     const {name,targetType,targetId,link} = req.body
 
-    const targetObject= await mongoose.model(targetType).findById(targetId);
+    const targetObject= await mongoose.model(targetType).findByIdAndUpdate(    
+        {_id: targetId},
+        {$push:{file:link}},
+        {new: true});
     if(!targetObject) throw new AppError(400,`${targetType} not found`, "Create Reaction error");
 
     const file = await File.create({name,targetId, targetType, author:currentUserId,link,});
@@ -23,6 +26,12 @@ fileController.deleteingleFile = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
     const fileId =req.params.id;
 
+    const targetObject= await mongoose.model(targetType).findByIdAndUpdate(    
+        {_id: targetId},
+        {$pull:{file:link}},
+        {new: true});
+
+    if(!targetObject) throw new AppError(400,`${targetType} not found`, "Create Reaction error");
     const file = await File.findOneAndDelete(
         {_id: fileId, assigner: currentUserId},
         {new: true}

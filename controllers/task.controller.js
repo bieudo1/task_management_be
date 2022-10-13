@@ -69,7 +69,7 @@ taskController.deleteUserFromTask = catchAsync(async (req, res, next) => {
 
     let task = await Task.findByIdAndUpdate(
         {_id: taskId},
-        {assignee:[]}
+        {$pull:{assignee:userId}}
     );
     // task = await task.save();
     return sendResponse(res,200,true,task,null,"assign tasks to user");
