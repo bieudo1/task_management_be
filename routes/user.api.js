@@ -32,6 +32,13 @@ router.get('/',authentication.loginRequired ,userController.getUsers);
 */
 router.get('/me',authentication.loginRequired , userController.getCurrentUser);
 
+/* @route Get /users/admin
+    @descripton get current user info
+    @body 
+    @access login request
+*/
+router.get('/admin',authentication.loginRequired , userController.getCurrentUserAdmin);
+
 /* @route Get /users/:id
     @descripton get users profile
     @body
@@ -58,5 +65,7 @@ router.put('/:id', authentication.loginRequired ,validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId )
 ]),userController.updatePorfile);
 
-
+router.delete('/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),userController.deleteingleUser);
 module.exports = router;

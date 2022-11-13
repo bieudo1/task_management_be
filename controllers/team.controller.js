@@ -42,7 +42,8 @@ teamController.getTeamList = catchAsync(async (req, res, next) => {
     const totalPages = Math.ceil(count / limit);
     const offset = limit * (page - 1);
 
-    let teams = await Team.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("manager");
+    let teams = await Team.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("manager").populate("workers");
+    
 
     return sendResponse(res,200,true,{teams,totalPages,count},null,"Get Current User successful");
 })
@@ -51,10 +52,10 @@ teamController.getSingleTeam = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
     const teamId =req.params.id;
 
-    let team= await Team.findById(teamId);
+    let team= await Team.findById(teamId).populate("workers");
     if(!team) throw new AppError(400,"team.1 not found","Get single team Error");
 
-    return sendResponse(res,200,true,team,null,"Get Team successful");
+    return sendResponse(res,200,true,{team},null,"Get Team successful");
 })
 
 teamController.updateSingleTeam = catchAsync(async (req, res, next) => {
@@ -127,4 +128,6 @@ teamController.deleteSingleTeam = catchAsync(async (req, res, next) => {
 
     return sendResponse(res,200,true,team,null,"Delete Team successful");
 })
+
+
 module.exports = teamController;

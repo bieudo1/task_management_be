@@ -25,13 +25,12 @@ const userSchema = Schema(
 		},
 		team: {
 			type:Schema.Types.ObjectId,
-			type: String,
             required: false,
             ref: "Team",
 		},
-		imageUrl: {
+		avatarUrl: {
 			type: String,
-			required: true,
+			required: false,
 		},
 		phone1: {
 			type: Number,

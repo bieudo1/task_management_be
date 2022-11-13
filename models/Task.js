@@ -6,10 +6,6 @@ const taskSchema = Schema(
 			type: String,
 			required: true,
 		},
-        description: {
-			type: String,
-			required: true,
-		},
         project:{type:Schema.Types.ObjectId,
             required: true,
             ref: "Project",},
@@ -25,19 +21,24 @@ const taskSchema = Schema(
         },
         status: { 
             type: String,
-            enum: ["pending", "working","review","done","archive"], 
+            enum: ["rework","working","review","done","archive"], 
             require: true,
             default: "working"
         },
         review:[{
             type: String,
             required: false,
-            default: '',
         }],
-        due:{
-            type: Number,
+        dueAt:{
+            type: Date,
             required: true,
         },
+        doneAt:{
+            type: Date,
+        },
+        reviewAt:[{
+            type: Date,
+        }],
         file:[{
             type:Schema.Types.ObjectId,
             required: false,

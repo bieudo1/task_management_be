@@ -11,6 +11,11 @@ const projectSchema = Schema(
             type:String,
             required: true,
         },
+        team: { 
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "Team",
+        },  
         assigner: { 
             type: Schema.Types.ObjectId,
             required: true,
@@ -18,7 +23,6 @@ const projectSchema = Schema(
         },
         assignee: [{ 
             type: Schema.Types.ObjectId,
-            required: true,
             ref: "User",
         }],
         task: [{ 
@@ -26,11 +30,22 @@ const projectSchema = Schema(
             required: false,
             ref: "Task",
         }],
+        file:[{
+            type:Schema.Types.ObjectId,
+            required: false,
+            ref: 'File',
+        }],
         status: { 
             type: String,
             enum: ["working","done","archive"], 
             require: true,
             default:'working'
+        },
+        due:{
+            type: Date,
+        },
+        dateoffiling:{
+            type: Date,
         },
 		isDeleted: { type: Boolean, default: false, select: false },
 	},

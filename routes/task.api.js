@@ -14,10 +14,17 @@ router.post('/',
     authentication.loginRequired,
     validators.validate([
         body("name","Missing name").exists().notEmpty(),
-        body("description","Missing description").exists().notEmpty(),
         body("projectId","Missing projectId").exists().isString().custom(validators.checkObjectId )
     ]),
     taskController.createNewTask
+);
+
+router.put('/review/:id',
+    authentication.loginRequired,
+    validators.validate([
+        body("review","Missing review").exists().notEmpty(),
+    ]),
+    taskController.reviewTask
 );
 
 /* @route Put /task/:id
@@ -27,7 +34,6 @@ router.post('/',
 */
 router.put('/:id', authentication.loginRequired ,validators.validate([
         param("id").exists().isString().custom(validators.checkObjectId ),
-        body("name","Missing name").exists().notEmpty(),
     ]),
     taskController.updateSingleTask
 );
@@ -46,6 +52,16 @@ router.delete('/:id', authentication.loginRequired ,validators.validate([
     @body 
     @access login request
 */
+
+router.get('/', authentication.loginRequired,taskController.getTasks);
+
+router.get('/me', authentication.loginRequired,taskController.getTasksMine);
+
+router.get('/project/:id', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),taskController.getTaskInProject);
+
+
 router.get('/:id', authentication.loginRequired ,validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId )
 ]),taskController.getSingleTask);
@@ -56,6 +72,11 @@ router.get('/:id', authentication.loginRequired ,validators.validate([
     @access login request
 */
 router.put('/:id/user', authentication.loginRequired ,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId ),
+    body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
+]),taskController.putTasksForUsers);
+
+router.put('/:id/statur', authentication.loginRequired ,validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId ),
     body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
 ]),taskController.putTasksForUsers);

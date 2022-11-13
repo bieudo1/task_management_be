@@ -6,15 +6,14 @@ const validators = require('../middlewares/validators');
 const router = express.Router();
 
 
-router.get('/user/:userId',validators.validate([
-    param("userId").exists().isString().custom(validators.checkObjectId )
-]),projectController.getProjects);
+router.get('/',authentication.loginRequired,projectController.getProjects);
 
 
 router.post('/',authentication.loginRequired,
     validators.validate([
         body("name","Missing name").exists().notEmpty(),
         body("description","Missing description").exists().notEmpty(),
+            
     ]),
     projectController.createNewProject
     );

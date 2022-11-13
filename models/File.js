@@ -2,28 +2,24 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema
 const fileSchema = Schema(
 	{
-		name: {
-			type: String,
-			required: true,
-		},
 		author: { 
             type:Schema.Types.ObjectId,
             required: true,
             ref: "User",
         },
-        link: {
+        FileUrl: {
 			type: String,
 			required: true,
 		},
-		targetType:{
-            type:String,
-            required: true,
-            enum:["Project","Task"]
-        },
-        targetId: { 
+        projectId: { 
             type:Schema.Types.ObjectId,
             required: true,
-            ref: "targetType",
+            ref: "Project",
+        },
+        taskId: { 
+            type:Schema.Types.ObjectId,
+            required: true,
+            ref: "Task",
         },
     },
 	{

@@ -8,7 +8,7 @@ const teamSchema = Schema(
         },
         manager: { 
             type:Schema.Types.ObjectId,
-            required: true,
+            required: false,
             ref: "User",
         },
         workers: [{ 

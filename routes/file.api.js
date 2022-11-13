@@ -15,13 +15,15 @@ router.post(
     '/',
     authentication.loginRequired,
     validators.validate([
-        body("targetType","Invalid targetType").exists().isIn("Project","Task"),
-        body("targetId","Invalid targetId").exists().custom(validators.checkObjectId ),
+        body("projectId","Invalid targetId").exists().custom(validators.checkObjectId ),
         body("link","Invalid link").exists().notEmpty(),
 ]),
 fileController.createNewFile
 );
 
+router.get('/:id',authentication.loginRequired,validators.validate([
+    param("id").exists().isString().custom(validators.checkObjectId )
+]),fileController.getfiles);
 
 router.delete('/:id', authentication.loginRequired ,validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId )
