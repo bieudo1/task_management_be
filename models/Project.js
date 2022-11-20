@@ -37,11 +37,11 @@ const projectSchema = Schema(
         }],
         status: { 
             type: String,
-            enum: ["working","done","archive"], 
+            enum: ["working","archive"], 
             require: true,
             default:'working'
         },
-        due:{
+        dueAt:{
             type: Date,
         },
         dateoffiling:{

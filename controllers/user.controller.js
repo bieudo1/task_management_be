@@ -27,17 +27,20 @@ function pad(n) {
 
 // thêm managerId và phone
 userController.register = catchAsync( async (req, res, next) => {
-    let {name,email,password,role,phone1,phone2,team } = req.body;
-    console.log(team,role)
+    let {name,email,password,position,phone1,phone2,teamId } = req.body;
     let user = await User.findOne({ email });
-    console.log(user)
     if (user) throw new AppError(400,"User already","Registration Error");
     const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(password,salt);
-    user= await User.create({name,email,password,role,team,phone1,phone2})
+    user= await User.create({name,email,password,position,teamId,phone1,phone2})
     user = await User.findById(user._id).populate("team")
-    const accessToken = await user.generateToken();
-    sendResponse(res,200,true,{user,accessToken},null,"Create User  Success")
+    let team = await Team.findByIdAndUpdate(
+        {_id: teamId},
+        {$push:{workers:user._id}},
+        {new: true}
+    );
+
+    sendResponse(res,200,true,{user,team},null,"Create User  Success")
 });
 
 userController.getUsers = catchAsync(async (req, res, next) => {
@@ -47,7 +50,7 @@ userController.getUsers = catchAsync(async (req, res, next) => {
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
 
-    const filterCondition = [{isDeleted: false,role:{$ne:"Ceo"}}];
+    const filterCondition = [{isDeleted: false,position:{$ne:"Ceo"}}];
 
     if(filter.name) {
         filterCondition.push({name: {$regex: filter.name, $options: "i"},})
@@ -73,13 +76,11 @@ userController.getCurrentUser = catchAsync( async (req, res, next) => {
 });
 
 userController.getCurrentUserAdmin = catchAsync( async (req, res, next) => {
+    const {watchDate} = req.query
     const date = new Date()
     const date1 = new Date()
     date.getDate()
-    date1.setDate(date.getDate() - 7);
-    console.log(date)
-    console.log(date1)
-
+    date1.setDate(date.getDate() - watchDate);
     const status = await Task.find({
         $and:[
             {doneAt:{$lte:date}},{doneAt:{$gte:date1}}
@@ -99,7 +100,7 @@ userController.getCurrentUserAdmin = catchAsync( async (req, res, next) => {
     });
     const userCount = await User.countDocuments({
         isDeleted: false,
-        role: {$ne: 'Ceo'}
+        position: {$ne: 'Ceo'}
     });
     const countTaskStatusArchive = await Task.countDocuments({
         isDeleted: false,status:{$eq:"archive"}

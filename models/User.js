@@ -18,7 +18,7 @@ const userSchema = Schema(
 			required: true,
 			selected: false
 		},
-		role: {
+		position: {
 			type: String,
 			required: true,
 			enum: ['Ceo', 'Manager', 'Worker'],

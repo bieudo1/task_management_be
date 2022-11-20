@@ -17,7 +17,7 @@ const calculateTaskConut = async (projectId) => {
 
 taskController.createNewTask= catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
-    let {name,assignee,dueAt,projectId} = req.body;
+    let {name,assignee,dueAt,projectId,important,urgent} = req.body;
     console.log(name,assignee,dueAt,projectId)
     let project= await Project.findById(projectId);
     if(!project) throw new AppError(400,"Project not found", "Create New task error");
@@ -26,6 +26,8 @@ taskController.createNewTask= catchAsync(async (req, res, next) => {
         project: projectId,
         assigner:currentUserId,
         assignee,
+        important,
+        urgent,
         name,dueAt
     })
     await Project.findByIdAndUpdate(
@@ -71,7 +73,7 @@ taskController.getTasks = catchAsync(async (req, res, next) => {
 taskController.getTasksMine = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
 
-    const filterCondition = [{isDeleted: false},{assignee:currentUserId}];
+    const filterCondition = [{isDeleted: false},{assignee:currentUserId,status:{$ne:"archive"}}];
   
     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 
@@ -153,11 +155,8 @@ taskController.updateSingleTask = catchAsync(async (req, res, next) => {
         "dueAt",
         "urgent",
         "important",
-        "phone2",
         "assignee",
         "status",
-        "important",
-        "urgent",
         "progress",
         ] 
         allows.forEach((field) =>{
@@ -202,8 +201,8 @@ taskController.reviewTask = catchAsync(async (req, res, next) => {
         },
         {new: true}
     );
-    if(!task) throw new AppError(400,"task not found or User not authorized","Delete task Error ")
+    if(!task) throw new AppError(400,"task not found or User not authorized","Review task Error ")
 
-    return sendResponse(res,200,true,task,null,"Delete Task successful");
+    return sendResponse(res,200,true,task,null,"Review Task successful");
 });
 module.exports = taskController;

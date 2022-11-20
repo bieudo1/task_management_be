@@ -16,7 +16,7 @@ router.post(
     authentication.loginRequired,
     validators.validate([
         body("projectId","Invalid targetId").exists().custom(validators.checkObjectId ),
-        body("link","Invalid link").exists().notEmpty(),
+        body("FileUrl","Invalid FileUrl").exists().notEmpty(),
 ]),
 fileController.createNewFile
 );

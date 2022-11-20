@@ -53,20 +53,20 @@ teamController.updateSingleTeam)
     @body {userId}
     @access login request
 */
-router.put('/:id/user', authentication.loginRequired ,validators.validate([
-    param("id").exists().isString().custom(validators.checkObjectId ),
-    body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
-]),teamController.putTeamForUser);
+// router.put('/:id/user', authentication.loginRequired ,validators.validate([
+//     param("id").exists().isString().custom(validators.checkObjectId ),
+//     body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
+// ]),teamController.putTeamForUser);
 
-/* @route delete /team/:id/user
-    @descripton assign teams to user
-    @body {userId}
-    @access login request
-*/
-router.delete('/:id/user', authentication.loginRequired ,validators.validate([
-    param("id").exists().isString().custom(validators.checkObjectId ),
-    body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
-]),teamController.deleteUserFomTeam);
+// /* @route delete /team/:id/user
+//     @descripton assign teams to user
+//     @body {userId}
+//     @access login request
+// */
+// router.delete('/:id/user', authentication.loginRequired ,validators.validate([
+//     param("id").exists().isString().custom(validators.checkObjectId ),
+//     body("userId","Invalid targetId").exists().custom(validators.checkObjectId ),
+// ]),teamController.deleteUserFomTeam);
 
 /* @route delete /team/:id/user
     @descripton delete Single Team

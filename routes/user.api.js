@@ -53,7 +53,7 @@ router.get('/:id', authentication.loginRequired ,validators.validate([
     @descripton Update user profile
     @body {"name",
     "avatarUrl",
-    "role",
+    "position",
     "team",
     "imageUrl",
     "phone1",

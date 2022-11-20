@@ -64,7 +64,7 @@ projectController.getSingleProject = catchAsync( async (req, res, next) => {
     if(!project) throw new AppError(400,"Project not found","Get Single Project Error");
 
 
-    return sendResponse(res,200,true,project,null,"Get Single Project successful");
+    return sendResponse(res,200,true,{project},null,"Get Single Project successful");
 });
 
 projectController.getTaskOfProject = catchAsync(async (req, res, next) => {
@@ -118,10 +118,13 @@ projectController.updateSingleProject = catchAsync(async (req, res, next) => {
     if(!project.assigner.equals(currentUserId)) 
         throw new AppError(400,"Only assigner can edit project" , "Update Project Error");
 
-    const allows = [
+    const allows = 
+    [
     "name",
     "description",
-    "team"]
+    "assignee",
+    "status",
+    ]
 
     allows.forEach((field) =>{
         if(req.body[field] !== undefined){
@@ -129,7 +132,7 @@ projectController.updateSingleProject = catchAsync(async (req, res, next) => {
         }
     })
     await project.save();
-
+    await project.populate("assignee")
     return sendResponse(res,200,true,project,null,"update Project successful");
 });
 
