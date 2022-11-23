@@ -44,7 +44,6 @@ router.get('/:id', authentication.loginRequired ,validators.validate([
 */
 router.put('/:id', authentication.loginRequired ,validators.validate([
     param("id").exists().isString().custom(validators.checkObjectId ),
-    body("name","Missing name").exists().notEmpty(),
 ]),
 teamController.updateSingleTeam)
 

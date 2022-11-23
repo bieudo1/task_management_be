@@ -50,9 +50,9 @@ taskController.getTasks = catchAsync(async (req, res, next) => {
 
     const user = await User.findById(currentUserId)
 
-    console.log(user.team.toString());
+    console.log(user.team);
 
-    const filterCondition = [{isDeleted: false},{team:user.team.toString()}];
+    const filterCondition = [{isDeleted: false}];
      if(filter.name) {
         filterCondition.push({name: {$regex: filter.name, $options: "i"},})
      }
@@ -72,8 +72,11 @@ taskController.getTasks = catchAsync(async (req, res, next) => {
 
 taskController.getTasksMine = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
+    const user = await User.findById(currentUserId);
 
-    const filterCondition = [{isDeleted: false},{assignee:currentUserId,status:{$ne:"archive"}}];
+    // const position = user.position === "Worker"
+
+    const filterCondition = [{isDeleted: false},{$or:[{assignee:currentUserId},{assigner:currentUserId}],status:{$ne:"archive"}}];
   
     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};
 

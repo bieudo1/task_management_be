@@ -39,9 +39,12 @@ projectController.getProjects = catchAsync(async (req, res, next) => {
     const user = await User.findById(currentUserId);
 
 
-    const filterCondition = [{isDeleted: false},{team:user.team},{status:{$ne:"archive"}}];
+    const filterCondition = [{isDeleted: false},{status:{$ne:"archive"}}];
      if(filter.name) {
-        filterCondition.push({name: {$regex: filter.name, $options: "i"},})
+        filterCondition.push({name: {$regex: filter.name, $options: "i"}})
+     }
+     if(user.position !== "Ceo"){
+        filterCondition.push({team:user.team})
      }
     
     const filterCrileria = filterCondition.length ? { $and: filterCondition}: {};

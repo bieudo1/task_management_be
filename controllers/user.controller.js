@@ -32,15 +32,19 @@ userController.register = catchAsync( async (req, res, next) => {
     if (user) throw new AppError(400,"User already","Registration Error");
     const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(password,salt);
-    user= await User.create({name,email,password,position,teamId,phone1,phone2})
-    user = await User.findById(user._id).populate("team")
-    let team = await Team.findByIdAndUpdate(
-        {_id: teamId},
-        {$push:{workers:user._id}},
-        {new: true}
-    );
-
-    sendResponse(res,200,true,{user,team},null,"Create User  Success")
+    user= await User.create({name,email,password,position,team:teamId,phone1,phone2})
+    let team = null
+    if(teamId){
+        user = await User.findById(user._id).populate("team")
+        team = await Team.findByIdAndUpdate(
+            {_id: teamId},
+            {$push:{workers:user._id}},
+            {new: true}
+        ).populate("manager")
+        await team.populate("workers")
+    }
+    const accessToken = await user.generateToken();
+    sendResponse(res,200,true,{user,team,accessToken},null,"Create User  Success")
 });
 
 userController.getUsers = catchAsync(async (req, res, next) => {
@@ -63,9 +67,10 @@ userController.getUsers = catchAsync(async (req, res, next) => {
     const offset = limit * (page - 1);
 
     let users = await User.find(filterCrileria).sort({createdAt: -1 }).skip(offset).limit(limit).populate("team");
+    let userNoTeam = await User.find({team:null,position:{$ne:"Ceo"},isDeleted: false})
     // let teams = await Team.find().populate("manager").populate("workers");
 
-    return sendResponse(res,200,true,{users,totalPages,count},null,"Get Current User successful");
+    return sendResponse(res,200,true,{users,totalPages,count,userNoTeam},null,"Get Current User successful");
 });
 
 userController.getCurrentUser = catchAsync( async (req, res, next) => {
@@ -167,15 +172,32 @@ userController.updatePorfile = catchAsync(async (req, res, next) => {
 userController.deleteingleUser = catchAsync(async (req, res, next) => {
     const currentUserId = req.userId;
     const userId =req.params.id;
-
     const user = await User.findOneAndUpdate(
         {_id: userId},
         {isDeleted: true},
         {new: true}
     )
     if(!user) throw new AppError(400,"user not found or User not authorized","Delete user Error ")
+    let team= null
 
-    return sendResponse(res,200,true,user,null,"update user successful");
+    if(user.position === "Manager"){
+        team = await Team.findByIdAndUpdate(
+            {_id:user.team},
+            {manager:null},
+            {new: true}
+            )
+    }
+    if(user.position === "Worker"){
+        team = await Team.findByIdAndUpdate(
+            {_id:user.team},
+            {$pull:{workers:user._id}},
+            {new: true}
+            )
+    }
+
+    await team.populate("workers")
+    await team.populate("manager")
+    return sendResponse(res,200,true,{user,team},null,"update user successful");
 });
 
 
