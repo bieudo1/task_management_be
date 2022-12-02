@@ -10,84 +10,202 @@
 
 ## Requirements
 
-### CREATE
+### API endpoints
 
-`POST /car`
-Expected body of request:
-
-```json=
-{
-    "make": "Plymouth",
-    "model": "Colt",
-    "release_date": 2002,
-    "transmission_type": "MANUAL",
-    "size": "Compact",
-    "style": "Coupe",
-    "price": 23000
-}
+#### Auth APIs
+```
+* @route POST /auth/login
+* @description Log in with username and password
+* @body {email, passsword}
+* @access Public
 ```
 
-Expected response:
+#### Team APIs
+```
+    @route Post /teams
+    @descripton create New Team
+    @body {"name",
+    "manager"}
+    @access login request
+```
+```
+    @route Get/teams/page=1&limit=10
+    @descripton get teams with paginaton
+    @body
+    @access login request
+```
+```
+    @route Get /teams/:id
+    @descripton get Single Team
+    @body 
+    @access login request
+```
+```
+    @route Put /teams/:id
+    @descripton update Single Team
+    @body {"name",
+    "manager",
+    "workers"}
+    @access login request
+```
 
-```json=
-{
-    "message": "Create Car Successfully!",
-    "car": {
-        "make": "Plymouth",
-        "model": "Colt",
-        "release_date": 2002,
-        "transmission_type": "MANUAL",
-        "size": "Compact",
-        "style": "Coupe",
-        "price": 23000,
+#### User APIs
+```
+    @route Post /users
+    @descripton Reginster new user
+    @body {"name","email" , "password"}
+    @access public
+```
+```
+    @route Get /users/page=1&limit=10
+    @descripton get users with paginaton
+    @body 
+    @access login request
+```
+```
+    @route Get /users/me
+    @descripton get current user info
+    @body 
+    @access login request
+```
+```
+    @route Get /users/admin
+    @descripton admin get information
+    @body 
+    @access login request
+```
+```
+    @route Get /users/:id
+    @descripton get users profile
+    @body
+    @access login request
+```
+```
+    @route Put /users/:id
+    @descripton Update user profile
+    @body {"name",
+    "avatarUrl",
+    "position",
+    "team",
+    "imageUrl",
+    "phone1",
+    "phone2",
+    "manager",}
+    @access login request
+```
+```
+    @route delete /users/:id
+    @descripton delete user
+    @body
+    @access login request
+```
+
+#### File APIs
+```
+    @route Post /files
+    @descripton create new file
+    @body {
+    "FileUrl",
+    "projectId",
+    "taskId"}
+    @access login request
+```
+```
+    @route Get /files
+    @descripton get list files
+    @body 
+    @access login request
+```
+#### Project APIs
+```
+    @route Post /projects
+    @descripton create new project
+    @body
+    {"name",
+    "description",
+    "team",
+    "assignee",
     }
-}
+    @access login request
+```
+```
+    @route Get /projects/page=1&limit=10
+    @descripton get projects with paginaton
+    @body 
+    @access login request
+```
+```
+    @route Get /projects/:id
+    @descripton get project profile
+    @body
+    @access login request
+```
+```
+    @route Delete /projects/:id
+    @descripton delete a project
+    @body 
+    @access login request
+```
+```
+    @route Put /projects/:id
+    @descripton update a project
+    @body {"name",
+    "description",
+    "assignee",
+    "status",}
+    @access login request
 ```
 
-### READ
 
-`GET /car`
-
-Expected response:
-
-```json=
-{
-    "message": "Get Car List Successfully!",
-    "cars": [
-        //car objects
-    ],
-    "page": 1,
-    // total pages
-    "total": 1192
-}
+#### Task APIs
+```
+    @route Post /tasks
+    @descripton create new task
+    @body
+    {"name",
+    "dueAt",
+    "assignee",
+    "project",
+    "important",
+    "urgent"}
+    @access login request
+```
+```
+    @route Put /tasks/:id
+    @descripton update a task
+    @body {"name",
+        "dueAt",
+        "urgent",
+        "important",
+        "assignee",
+        "status",
+        "progress"}
+    @access login request
+```
+```
+    @route Put /review/:id
+    @descripton write a comment
+    @body 
+    @access login request
+```
+```
+    @route Delete /tasks/:id
+    @descripton delete a task
+    @body 
+    @access login request
+```
+```
+    @route Get /tasks/page=1&limit=10
+    @descripton get tasks with paginaton
+    @body 
+    @access login request
+```
+```
+    @route Get /tasks/:id
+    @descripton get task profile
+    @body
+    @access login request
 ```
 
-### UPDATE
-
-`PUT /car/:id`
-
-Expected response:
-
-```json=
-{
-    "message": "Update Car Successfully!",
-    {
-    //car object
-    }
-}
-```
-
-### DELETE
-
-`DELETE /car/:id`
-
-Expected response:
-
-```json=
-{
-    "message": "Delete Car Successfully!",
-    {
-    //car object
-    }
-}
-```
+### Diagram Relation
+![](https://i.imgur.com/sGBgGxb.png)
