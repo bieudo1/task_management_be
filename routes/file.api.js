@@ -6,9 +6,9 @@ const validators = require('../middlewares/validators');
 const router = express.Router();
 
 
-/* @route Post /projects
+/* @route Post /files
     @descripton create new quest
-    @body {name,description,due}
+    @body {name,FileUrl,projectId,taskId}
     @access login request
 */
 router.post(
