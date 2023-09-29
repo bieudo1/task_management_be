@@ -1,28 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 // authApi
 const authAPI = require("./auth.api");
 router.use("/auth", authAPI);
 
-// userApi
-const userAPI = require('./user.api');
-router.use('/users', userAPI);
+// adminApi
+const userAPI = require("./admin.api");
+router.use("/admin", adminAPI);
 
-// taskApi
-const taskAPI = require('./task.api');
-router.use('/tasks', taskAPI);
+// postApi
+const postAPI = require("./post.api");
+router.use("/posts", postAPI);
 
-// fileApi
-const fileAPI = require('./file.api');
-router.use('/files', fileAPI);
-
-// projectApi
-const projectAPI = require('./project.api');
-router.use('/projects', projectAPI);
-
-// teamApi
-const teamAPI = require('./team.api');
-router.use('/teams', teamAPI);
+// productApi
+const productAPI = require("./product.api");
+router.use("/products", productAPI);
 
 module.exports = router;
